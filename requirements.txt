@@ -1,0 +1,17 @@
+black==25.1.0
+cfgv==3.4.0
+click==8.2.1
+distlib==0.4.0
+filelock==3.19.1
+identify==2.6.14
+mypy_extensions==1.1.0
+nodeenv==1.9.1
+packaging==25.0
+pathspec==0.12.1
+platformdirs==4.4.0
+pre_commit==4.3.0
+pyright==1.1.405
+PyYAML==6.0.2
+ruff==0.12.12
+typing_extensions==4.15.0
+virtualenv==20.34.0

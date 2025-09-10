@@ -1,0 +1,81 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+    # General hooks for all projects
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v6.0.0
+      hooks:
+          - id: trailing-whitespace
+            args: [--markdown-linebreak-ext=md]
+          - id: end-of-file-fixer
+          - id: check-yaml
+          - id: check-toml
+          - id: check-json
+          - id: check-merge-conflict
+          - id: check-added-large-files
+            args: ["--maxkb=1000"]
+          - id: check-case-conflict
+          - id: check-docstring-first
+          - id: debug-statements
+          - id: name-tests-test
+            args: ["--pytest-test-first"]
+
+    # Python formatting with Black
+    - repo: https://github.com/psf/black
+      rev: 25.1.0
+      hooks:
+          - id: black
+            args: ["--line-length=120"]
+            language_version: python3.12
+
+    # Python linting with Ruff (replaces flake8, isort, and more)
+    - repo: https://github.com/astral-sh/ruff-pre-commit
+      rev: v0.12.12
+      hooks:
+          # Linter
+          - id: ruff
+            args: ["--fix", "--exit-non-zero-on-fix"]
+            types_or: [python, pyi, jupyter]
+          # Formatter (ruff format is faster than black, but optional)
+          # Uncomment if you want to use ruff format instead of black
+          # - id: ruff-format
+          #   types_or: [python, pyi, jupyter]
+
+    # Type checking with basedpyright (рекомендуется)
+    - repo: https://github.com/DetachHead/basedpyright-pre-commit-mirror
+      rev: 1.31.4
+      hooks:
+          - id: basedpyright
+            additional_dependencies: [] # Add your project dependencies here if needed
+
+    # Optional: Security checks
+    - repo: https://github.com/PyCQA/bandit
+      rev: 1.8.6
+      hooks:
+          - id: bandit
+            args: ["-c", "pyproject.toml"]
+            additional_dependencies: ["bandit[toml]"]
+
+    # Optional: Check for secrets
+#    - repo: https://github.com/Yelp/detect-secrets
+#      rev: v1.5.0
+#      hooks:
+#          - id: detect-secrets
+#            args: ["--baseline", ".secrets.baseline"]
+#            exclude: package.lock.json
+
+# Global settings
+default_language_version:
+    python: python3.12
+
+ci:
+    autofix_commit_msg: |
+        [pre-commit.ci] auto fixes from pre-commit hooks
+
+        for more information, see https://pre-commit.ci
+    autofix_prs: true
+    autoupdate_branch: ""
+    autoupdate_commit_msg: "[pre-commit.ci] pre-commit autoupdate"
+    autoupdate_schedule: weekly
+    skip: []
+    submodules: false

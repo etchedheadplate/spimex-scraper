@@ -1,0 +1,9 @@
+{
+    "include": ["src", "tests"],
+    "exclude": ["**/node_modules", "**/__pycache__", ".venv"],
+    "pythonVersion": "3.12",
+    "typeCheckingMode": "strict",
+    "useLibraryCodeForTypes": true,
+    "reportMissingImports": true,
+    "reportMissingTypeStubs": false
+}
