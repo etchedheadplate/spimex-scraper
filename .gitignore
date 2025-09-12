@@ -219,6 +219,7 @@ temp/
 *.tmp
 *.bak
 *.backup
+bulletins/
 
 # Secrets and sensitive data
 .secrets/
