@@ -10,7 +10,7 @@ import requests
 from bs4 import BeautifulSoup, Tag
 
 
-class SpimexScraper:
+class LinkScraper:
     def __init__(self, start_date: datetime, end_date: datetime) -> None:
         self.start_date = start_date
         self.end_date = end_date
@@ -83,9 +83,9 @@ class FileDownloader:
             await asyncio.gather(*tasks)
 
 
-class SpimexDownloader:
+class SpimexScraper:
     def __init__(self, start_date: datetime, end_date: datetime) -> None:
-        self.scraper = SpimexScraper(start_date, end_date)
+        self.scraper = LinkScraper(start_date, end_date)
         self.downloader = FileDownloader()
 
     def run(self) -> None:
@@ -100,4 +100,4 @@ class SpimexDownloader:
 if __name__ == "__main__":
     start = datetime(2023, 1, 1)
     end = datetime.today()
-    SpimexDownloader(start, end).run()
+    SpimexScraper(start, end).run()
