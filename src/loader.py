@@ -5,14 +5,15 @@ from .models import SpimexTradingResults
 
 
 class SpimexLoader:
-    def __init__(self, session: Session):
-        self.model = SpimexTradingResults
+    def __init__(self, session: Session, df: pd.DataFrame):
         self.session = session
+        self.df = df
+        self.model = SpimexTradingResults
 
-    def load(self, df: pd.DataFrame, update_on_conflict: bool = False) -> None:
+    def load(self, update_on_conflict: bool = False) -> None:
         model_columns = {c.name for c in self.model.__table__.columns}
 
-        df_filtered = df.loc[:, df.columns.intersection(model_columns)]  # type: ignore
+        df_filtered = self.df.loc[:, self.df.columns.intersection(model_columns)]  # type: ignore
         df_filtered = df_filtered.where(pd.notnull(df_filtered), None)  # type: ignore
 
         records = df_filtered.to_dict(orient="records")  # type: ignore
