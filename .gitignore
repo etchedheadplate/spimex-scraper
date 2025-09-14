@@ -220,6 +220,7 @@ temp/
 *.bak
 *.backup
 bulletins/
+bulletins_backup/
 
 # Secrets and sensitive data
 .secrets/
