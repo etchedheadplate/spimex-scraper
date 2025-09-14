@@ -48,7 +48,6 @@ class LinkCollector:
         return links
 
     async def collect_links(self, workers: int) -> None:
-        """Собирает ссылки и сразу кладёт их в очередь"""
         page = 1
         count = 0
 
@@ -83,10 +82,15 @@ class FileDownloader:
         self.max_concurrent = max_concurrent
         self.queue = queue or asyncio.Queue()
         os.makedirs(download_dir, exist_ok=True)
+        self.downloaded_files: list[str] = []
 
     async def _download_file(self, session: aiohttp.ClientSession, url: str) -> None:
         filename = url.split("/")[-1].split("?")[0]
         filepath = os.path.join(self.download_dir, filename)
+
+        if os.path.exists(filepath):
+            print(f"[Downloader] Файл уже существует: {filepath}, пропускаем.")
+            return
 
         print(f"[Downloader] Начинаю скачивание: {url}")
         try:
@@ -96,13 +100,13 @@ class FileDownloader:
                         async for chunk in resp.content.iter_chunked(8192):
                             await f.write(chunk)
                     print(f"[Downloader] Успешно скачан файл: {filepath}")
+                    self.downloaded_files.append(filepath)
                 else:
                     print(f"[Downloader] Ошибка {resp.status} при скачивании {url}")
         except Exception as e:
             print(f"[Downloader] Ошибка при скачивании {url}: {e}")
 
     async def consume_queue(self, worker_id: int = 1) -> None:
-        """Берёт ссылки из очереди и качает файлы"""
         sem = asyncio.Semaphore(self.max_concurrent)
         async with aiohttp.ClientSession() as session:
             while True:
@@ -126,12 +130,13 @@ class SpimexScraper:
         self.collector = LinkCollector(start_date, end_date, self.queue)
         self.downloader = FileDownloader(queue=self.queue)
         self.workers = workers
+        self.scrapped_files: list[str] = []
 
     def run(self) -> None:
         asyncio.run(self._main())
 
     async def _main(self) -> None:
-        print("[Main] Запуск producer (сбор ссылок) и consumers (скачивание).")
+        print("[Scraper] Запуск producer (сбор ссылок) и consumers (скачивание).")
 
         producer = asyncio.create_task(self.collector.collect_links(self.workers))
         consumers = [
@@ -139,7 +144,10 @@ class SpimexScraper:
         ]
 
         await asyncio.gather(producer, *consumers)
-        print("[Main] Все задачи завершены.")
+
+        self.scrapped_files = self.downloader.downloaded_files.copy()
+        print(f"[Scraper] Всего загружено {len(self.scrapped_files)} файлов.")
+        print("[Scraper] Все задачи завершены.")
 
 
 if __name__ == "__main__":
@@ -147,3 +155,4 @@ if __name__ == "__main__":
     end = datetime.today()
     scraper = SpimexScraper(start, end, workers=3)
     scraper.run()
+    files = scraper.scrapped_files
