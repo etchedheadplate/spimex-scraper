@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -11,6 +11,8 @@ class BaseModel(DeclarativeBase):
 class SpimexTradingResults(BaseModel):
     __tablename__ = "spimex_trading_results"
 
+    now = datetime.now(UTC)
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     exchange_product_id: Mapped[str] = mapped_column(String(20), nullable=False)
     oil_id: Mapped[str] = mapped_column(String(10), nullable=False)
@@ -20,9 +22,9 @@ class SpimexTradingResults(BaseModel):
     volume: Mapped[int] = mapped_column(Integer, nullable=False)
     total: Mapped[int] = mapped_column(Integer, nullable=False)
     count: Mapped[int] = mapped_column(Integer, nullable=False)
-    trading_date: Mapped[str] = mapped_column("date", String(10), nullable=True)
-    created_on: Mapped[datetime] = mapped_column(DateTime, nullable=True)
-    updated_on: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    date: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    created_on: Mapped[datetime] = mapped_column(DateTime, default=now)
+    updated_on: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
 
     def __repr__(self):
         fields = [
@@ -35,7 +37,7 @@ class SpimexTradingResults(BaseModel):
             f"volume={self.volume}",
             f"total={self.total}",
             f"count={self.count}",
-            f"date={self.trading_date}",
+            f"date={self.date}",
             f"created_on={self.created_on}",
             f"updated_on={self.updated_on}",
         ]
