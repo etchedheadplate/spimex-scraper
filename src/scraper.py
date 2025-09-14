@@ -130,7 +130,7 @@ class SpimexScraper:
         self.collector = LinkCollector(start_date, end_date, self.queue)
         self.downloader = FileDownloader(queue=self.queue)
         self.workers = workers
-        self.files: list[str] = []
+        self.scraped_files: list[str] = []
 
     def scrape(self) -> None:
         asyncio.run(self._main())
@@ -145,8 +145,8 @@ class SpimexScraper:
 
         await asyncio.gather(producer, *consumers)
 
-        self.files = self.downloader.downloaded_files.copy()
-        print(f"[Scraper] Всего загружено {len(self.files)} файлов.")
+        self.scraped_files = self.downloader.downloaded_files.copy()
+        print(f"[Scraper] Всего загружено {len(self.scraped_files)} файлов.")
         print("[Scraper] Все задачи завершены.")
 
 
@@ -155,4 +155,4 @@ if __name__ == "__main__":
     end = datetime.today()
     scraper = SpimexScraper(start, end, workers=3)
     scraper.scrape()
-    files = scraper.files
+    files = scraper.scraped_files
