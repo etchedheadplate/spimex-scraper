@@ -5,10 +5,9 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.loader import SpimexLoader
 from src.models import BaseModel
 from src.parser import SpimexParser
-from src.scraper import SpimexDownloader
+from src.scraper import SpimexScraper
 
 load_dotenv()
 
@@ -28,9 +27,11 @@ session = SessionLocal()
 
 start = datetime(2023, 1, 1)
 end = datetime.today()
-downloader = SpimexDownloader(start, end)
-# downloader.run()
-parser = SpimexParser()
-df = parser.parse("bulletins/oil_xls_20230109162000.xls")
-loader = SpimexLoader(session)
-loader.load(df)
+scraper = SpimexScraper(start, end)
+scraper.scrape()
+files = scraper.scraped_files
+parser = SpimexParser(files)
+parser.parse()
+parsed_df = parser.parsed_df
+# loader = SpimexLoader(session, parsed_df)
+# loader.load()
