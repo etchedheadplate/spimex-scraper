@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 import pandas as pd
 from sqlalchemy.orm import Session
 
@@ -16,6 +18,12 @@ class SpimexLoader:
         model_columns = {c.name for c in self.model.__table__.columns}
 
         df_filtered = self.df.loc[:, self.df.columns.intersection(model_columns)]  # type: ignore
+        df_filtered["date"] = pd.to_datetime(df_filtered["date"])  # type: ignore
+
+        now = datetime.now(UTC)
+        df_filtered["created_on"] = now
+        df_filtered["updated_on"] = now
+
         df_filtered = df_filtered.where(pd.notnull(df_filtered), None)  # type: ignore
         print(f"[Loader] Получено {len(df_filtered)} строк.")  # type: ignore
 
