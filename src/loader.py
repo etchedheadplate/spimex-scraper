@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime
 
 import pandas as pd
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +20,7 @@ class SpimexLoader:
         df_filtered = self.df.loc[:, self.df.columns.intersection(model_columns)]  # type: ignore
         df_filtered["date"] = pd.to_datetime(df_filtered["date"]).dt.date  # type: ignore
 
-        now = datetime.now(UTC)
+        now = datetime.now()
         df_filtered["created_on"] = now
         df_filtered["updated_on"] = now
 

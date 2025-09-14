@@ -1,6 +1,6 @@
-from datetime import UTC, datetime
+from datetime import datetime
 
-from sqlalchemy import Date, DateTime, Integer, String
+from sqlalchemy import Date, DateTime, Integer, String, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -11,7 +11,7 @@ class BaseModel(DeclarativeBase):
 class SpimexTradingResults(BaseModel):
     __tablename__ = "spimex_trading_results"
 
-    now = datetime.now(UTC)
+    now = datetime.now()
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     exchange_product_id: Mapped[str] = mapped_column(String(20), nullable=False)
@@ -23,8 +23,8 @@ class SpimexTradingResults(BaseModel):
     total: Mapped[int] = mapped_column(Integer, nullable=False)
     count: Mapped[int] = mapped_column(Integer, nullable=False)
     date: Mapped[datetime] = mapped_column(Date, nullable=True)
-    created_on: Mapped[datetime] = mapped_column(DateTime, default=now)
-    updated_on: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
+    created_on: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+    updated_on: Mapped[datetime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
 
     def __repr__(self):
         fields = [
