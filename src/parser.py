@@ -6,12 +6,14 @@ import pandas as pd
 class SpimexParser:
     def __init__(
         self,
+        files: list[str] | None = None,
         start_anchor: str = "Единица измерения: Метрическая тонна",
         end_anchor: str = "Итого:",
         date_anchor: str = "Дата торгов:",
         column_idx: dict[str, int] | None = None,
         engine: Literal["xlrd", "openpyxl", "odf", "pyxlsb", "calamine"] = "xlrd",
-    ):
+    ) -> None:
+        self.files = files
         self.start_anchor = start_anchor
         self.end_anchor = end_anchor
         self.date_anchor = date_anchor
@@ -28,11 +30,15 @@ class SpimexParser:
         else:
             self.column_idx = column_idx
 
-    def parse(self, file: str) -> pd.DataFrame:
+    def parse_file(self, file: str) -> pd.DataFrame:
         df = pd.read_excel(file, sheet_name=0, engine=self.engine)  # type: ignore
 
         date_cell = df.astype(str).stack()[lambda s: s.str.contains(self.date_anchor)].squeeze()  # type: ignore
-        trade_date = pd.to_datetime(date_cell.replace(self.date_anchor, "").strip(), dayfirst=True, errors="raise")  # type: ignore
+        trade_date = pd.to_datetime(  # type: ignore
+            date_cell.replace(self.date_anchor, "").strip(),  # type: ignore
+            dayfirst=True,
+            errors="raise",
+        )
 
         start_idx = df.isin([self.start_anchor]).any(axis=1).idxmax() + 3  # type: ignore
         end_idx = (df.iloc[start_idx:].isin([self.end_anchor]).any(axis=1)).idxmax()  # type: ignore
@@ -50,8 +56,18 @@ class SpimexParser:
 
         return df_table  # type: ignore
 
+    def parse_all(self) -> pd.DataFrame:
+        if self.files is None or len(self.files) == 0:
+            raise ValueError("[Parser] Файлы для парсинга отсутствуют.")
+
+        print(f"[Parser] Получено {len(self.files)} файлов.")
+        df_list = [self.parse_file(f) for f in self.files]
+        combined_df = pd.concat(df_list, ignore_index=True)
+        print(f"[Parser] Отпарсено {len(combined_df)} строк.")
+        return combined_df
+
 
 if __name__ == "__main__":
     parser = SpimexParser()
-    table = parser.parse("bulletins/oil_xls_20230109162000.xls")
+    table = parser.parse_all()
     print(table)
