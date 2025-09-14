@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime
 
 from sqlalchemy import Date, DateTime, Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -11,7 +11,7 @@ class BaseModel(DeclarativeBase):
 class SpimexTradingResults(BaseModel):
     __tablename__ = "spimex_trading_results"
 
-    now = datetime.now(UTC)
+    now = datetime.now()
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     exchange_product_id: Mapped[str] = mapped_column(String(20), nullable=False)
