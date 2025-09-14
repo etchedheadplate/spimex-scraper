@@ -1,9 +1,9 @@
+import asyncio
 import os
 from datetime import datetime
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from src.loader import SpimexLoader
 from src.models import BaseModel
@@ -18,21 +18,32 @@ DB_PORT = os.environ.get("DB_PORT")
 DB_USER = os.environ.get("DB_USER")
 DB_PASS = os.environ.get("DB_PASS")
 
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
-BaseModel.metadata.create_all(engine)
+engine = create_async_engine(DATABASE_URL, pool_pre_ping=True)
 
-SessionLocal = sessionmaker(bind=engine)
-session = SessionLocal()
+AsyncSessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False)
 
-start = datetime(2023, 1, 1)
-end = datetime.today()
-scraper = SpimexScraper(start, end)
-scraper.scrape()
-files = scraper.scraped_files
-parser = SpimexParser(files)
-parser.parse()
-parsed_df = parser.parsed_df
-loader = SpimexLoader(session, parsed_df)
-loader.load()
+
+async def main():
+    async with engine.begin() as conn:
+        await conn.run_sync(BaseModel.metadata.create_all)
+
+    async with AsyncSessionLocal() as session:
+        start = datetime(2023, 1, 1)
+        end = datetime.today()
+
+        scraper = SpimexScraper(start, end)
+        await scraper.scrape()
+        files = scraper.scraped_files
+
+        parser = SpimexParser(files)
+        parser.parse()
+        parsed_df = parser.parsed_df
+
+        loader = SpimexLoader(session, parsed_df)
+        await loader.load(update_on_conflict=False)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
