@@ -34,13 +34,6 @@ class SpimexParser:
     def create_df(self, file: str) -> pd.DataFrame:
         df = pd.read_excel(file, sheet_name=0, engine=self.engine)  # type: ignore
 
-        date_cell = df.astype(str).stack()[lambda s: s.str.contains(self.date_anchor)].squeeze()  # type: ignore
-        trade_date = pd.to_datetime(  # type: ignore
-            date_cell.replace(self.date_anchor, "").strip(),  # type: ignore
-            dayfirst=True,
-            errors="raise",
-        )
-
         start_idx = df.isin([self.start_anchor]).any(axis=1).idxmax() + 3  # type: ignore
         end_idx = (df.iloc[start_idx:].isin([self.end_anchor]).any(axis=1)).idxmax()  # type: ignore
 
@@ -50,7 +43,6 @@ class SpimexParser:
         df_table = df_table[pd.to_numeric(df_table["count"], errors="coerce").notna()]  # type: ignore
         df_table = df_table.reset_index(drop=True)  # type: ignore
 
-        df_table["trading_date"] = trade_date
         df_table["oil_id"] = df_table["exchange_product_id"].str[:4]  # type: ignore
         df_table["delivery_basis_id"] = df_table["exchange_product_id"].str[4:7]  # type: ignore
         df_table["delivery_type_id"] = df_table["exchange_product_id"].str[-1]  # type: ignore
