@@ -18,6 +18,7 @@ class SpimexParser:
         self.end_anchor = end_anchor
         self.date_anchor = date_anchor
         self.engine = engine
+        self.parsed_df = None
         if column_idx is None:
             self.column_idx = {
                 "exchange_product_id": 1,
@@ -30,7 +31,7 @@ class SpimexParser:
         else:
             self.column_idx = column_idx
 
-    def parse_file(self, file: str) -> pd.DataFrame:
+    def create_df(self, file: str) -> pd.DataFrame:
         df = pd.read_excel(file, sheet_name=0, engine=self.engine)  # type: ignore
 
         date_cell = df.astype(str).stack()[lambda s: s.str.contains(self.date_anchor)].squeeze()  # type: ignore
@@ -56,18 +57,19 @@ class SpimexParser:
 
         return df_table  # type: ignore
 
-    def parse_all(self) -> pd.DataFrame:
+    def parse(self) -> None:
         if self.files is None or len(self.files) == 0:
             raise ValueError("[Parser] Файлы для парсинга отсутствуют.")
 
         print(f"[Parser] Получено {len(self.files)} файлов.")
-        df_list = [self.parse_file(f) for f in self.files]
+        df_list = [self.create_df(f) for f in self.files]
         combined_df = pd.concat(df_list, ignore_index=True)
         print(f"[Parser] Отпарсено {len(combined_df)} строк.")
-        return combined_df
+
+        self.parsed_df = combined_df
 
 
 if __name__ == "__main__":
     parser = SpimexParser()
-    table = parser.parse_all()
+    table = parser.parse()
     print(table)
