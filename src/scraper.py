@@ -10,7 +10,7 @@ import requests
 from bs4 import BeautifulSoup, Tag
 
 
-class LinkExtractor:
+class LinkCollector:
     def __init__(self, start_date: datetime, end_date: datetime) -> None:
         self.start_date = start_date
         self.end_date = end_date
@@ -85,11 +85,11 @@ class FileDownloader:
 
 class SpimexScraper:
     def __init__(self, start_date: datetime, end_date: datetime) -> None:
-        self.scraper = LinkExtractor(start_date, end_date)
+        self.collector = LinkCollector(start_date, end_date)
         self.downloader = FileDownloader()
 
     def run(self) -> None:
-        links = self.scraper.collect_links()
+        links = self.collector.collect_links()
         if not links:
             print("Файлов для скачивания не найдено.")
             return
