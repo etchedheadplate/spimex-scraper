@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, Integer, String
+from sqlalchemy import Date, DateTime, Integer, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -22,7 +22,7 @@ class SpimexTradingResults(BaseModel):
     volume: Mapped[int] = mapped_column(Integer, nullable=False)
     total: Mapped[int] = mapped_column(Integer, nullable=False)
     count: Mapped[int] = mapped_column(Integer, nullable=False)
-    date: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    date: Mapped[datetime] = mapped_column(Date, nullable=True)
     created_on: Mapped[datetime] = mapped_column(DateTime, default=now)
     updated_on: Mapped[datetime] = mapped_column(DateTime, default=now, onupdate=now)
 
