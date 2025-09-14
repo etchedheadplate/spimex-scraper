@@ -50,6 +50,11 @@ class SpimexParser:
         df_table = df_table[pd.to_numeric(df_table["count"], errors="coerce").notna()]  # type: ignore
         df_table = df_table.reset_index(drop=True)  # type: ignore
 
+        # Convert numeric columns to proper integer types
+        numeric_columns = ["volume", "total", "count"]
+        for col in numeric_columns:
+            df_table[col] = pd.to_numeric(df_table[col], errors="coerce").astype("Int64")  # type: ignore
+
         df_table["date"] = trade_date
         df_table["oil_id"] = df_table["exchange_product_id"].str[:4]  # type: ignore
         df_table["delivery_basis_id"] = df_table["exchange_product_id"].str[4:7]  # type: ignore
