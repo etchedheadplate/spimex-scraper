@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from src.loader import SpimexLoader
 from src.models import BaseModel
 from src.parser import SpimexParser
 from src.scraper import SpimexScraper
@@ -33,5 +34,5 @@ files = scraper.scraped_files
 parser = SpimexParser(files)
 parser.parse()
 parsed_df = parser.parsed_df
-# loader = SpimexLoader(session, parsed_df)
-# loader.load()
+loader = SpimexLoader(session, parsed_df)
+loader.load()
