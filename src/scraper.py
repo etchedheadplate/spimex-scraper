@@ -134,7 +134,6 @@ class SpimexScraper:
         max_concurrent: int = 5,
     ) -> None:
         self.download_dir = download_dir
-        self.max_concurrent = max_concurrent
         self.queue: asyncio.Queue[str | None] = asyncio.Queue()
         self.collector = LinkCollector(start_date=start_date, end_date=end_date, queue=self.queue)
         self.downloader = FileDownloader(download_dir=download_dir, max_concurrent=max_concurrent, queue=self.queue)
@@ -152,5 +151,5 @@ class SpimexScraper:
         await asyncio.gather(producer, *consumers)
 
         self.scraped_files = self.downloader.downloaded_files.copy()
-        print(f"[Scraper] Всего загружено {len(self.scraped_files)} файлов.")
+        print(f"[Scraper] Всего загружено {len(self.scraped_files)} файлов в директорию {self.download_dir}.")
         print("[Scraper] Все задачи завершены.")
