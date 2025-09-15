@@ -21,8 +21,8 @@ class SpimexLoader:
         df_filtered["date"] = pd.to_datetime(df_filtered["date"]).dt.date  # type: ignore
 
         now = datetime.now()
-        df_filtered["created_on"] = now
-        df_filtered["updated_on"] = now
+        df_filtered["created_on"] = now  # type: ignore
+        df_filtered["updated_on"] = now  # type: ignore
 
         df_filtered = df_filtered.where(pd.notnull(df_filtered), None)  # type: ignore
         total_rows = len(df_filtered)  # type: ignore
@@ -30,7 +30,6 @@ class SpimexLoader:
 
         records = df_filtered.to_dict(orient="records")  # type: ignore
 
-        # Process in chunks
         total_processed = 0
         for i in range(0, len(records), chunk_size):  # type: ignore
             chunk = records[i : i + chunk_size]  # type: ignore
@@ -47,7 +46,7 @@ class SpimexLoader:
                 await self.session.commit()
                 total_processed += chunk_size_actual
                 print(
-                    f"[Loader] Загружен чанк {i//chunk_size + 1}: {chunk_size_actual} строк. "
+                    f"[Loader] Загружен чанк {i//chunk_size + 1}: {chunk_size_actual} строк."
                     f"Всего обработано: {total_processed}/{total_rows} ({total_processed/total_rows*100:.1f}%)"
                 )
 
