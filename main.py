@@ -3,7 +3,9 @@ import os
 from datetime import datetime
 
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy_utils import create_database, database_exists  # type: ignore
 
 from src.loader import SpimexLoader
 from src.models import BaseModel
@@ -18,9 +20,19 @@ DB_PORT = os.environ.get("DB_PORT")
 DB_USER = os.environ.get("DB_USER")
 DB_PASS = os.environ.get("DB_PASS")
 
-DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+SYNC_DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-engine = create_async_engine(DATABASE_URL, pool_pre_ping=True)
+sync_engine = create_engine(SYNC_DATABASE_URL)
+
+if not database_exists(sync_engine.url):
+    create_database(sync_engine.url)
+    print(f"[MAIN] База {DB_NAME} создана.")
+else:
+    print(f"[MAIN] База {DB_NAME} уже существует.")
+
+ASYNC_DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+engine = create_async_engine(ASYNC_DATABASE_URL, pool_pre_ping=True)
 
 AsyncSessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False)
 
