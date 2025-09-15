@@ -7,14 +7,22 @@ from .models import SpimexTradingResults
 
 
 class SpimexLoader:
-    def __init__(self, session: AsyncSession, df: pd.DataFrame | None = None) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        df: pd.DataFrame | None = None,
+        update_on_conflict: bool = False,
+        chunk_size: int = 1000,
+    ) -> None:
         self.session = session
         self.df = df
+        self.update_on_conflict = update_on_conflict
+        self.chunk_size = chunk_size
         self.model = SpimexTradingResults
         if self.df is None:
             raise ValueError("[Loader] DataFrame для загрузки отсутствует.")
 
-    async def load(self, update_on_conflict: bool = False, chunk_size: int = 1000) -> None:
+    async def load(self) -> None:
         model_columns = {c.name for c in self.model.__table__.columns}
 
         df_filtered = self.df.loc[:, self.df.columns.intersection(model_columns)]  # type: ignore
@@ -31,12 +39,12 @@ class SpimexLoader:
         records = df_filtered.to_dict(orient="records")  # type: ignore
 
         total_processed = 0
-        for i in range(0, len(records), chunk_size):  # type: ignore
-            chunk = records[i : i + chunk_size]  # type: ignore
+        for i in range(0, len(records), self.chunk_size):  # type: ignore
+            chunk = records[i : i + self.chunk_size]  # type: ignore
             chunk_size_actual = len(chunk)  # type: ignore
 
             try:
-                if update_on_conflict:
+                if self.update_on_conflict:
                     for record in chunk:  # type: ignore
                         await self.session.merge(self.model(**record))
                 else:
@@ -46,13 +54,13 @@ class SpimexLoader:
                 await self.session.commit()
                 total_processed += chunk_size_actual
                 print(
-                    f"[Loader] Загружен чанк {i//chunk_size + 1}: {chunk_size_actual} строк."
+                    f"[Loader] Загружен чанк {i//self.chunk_size + 1}: {chunk_size_actual} строк."
                     f"Всего обработано: {total_processed}/{total_rows} ({total_processed/total_rows*100:.1f}%)"
                 )
 
             except Exception as e:
                 await self.session.rollback()
-                print(f"[Loader] Ошибка при загрузке чанка {i//chunk_size + 1}: {e}")
+                print(f"[Loader] Ошибка при загрузке чанка {i//self.chunk_size + 1}: {e}")
                 raise
 
         print(f"[Loader] Успешно загружено {total_processed} строк.")
