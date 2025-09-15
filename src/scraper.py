@@ -74,8 +74,8 @@ class LinkCollector:
 class FileDownloader:
     def __init__(
         self,
-        download_dir: str = "bulletins",
-        max_concurrent: int = 5,
+        download_dir: str,
+        max_concurrent: int,
         queue: asyncio.Queue[str | None] | None = None,
     ) -> None:
         self.download_dir = download_dir
@@ -125,10 +125,19 @@ class FileDownloader:
 
 
 class SpimexScraper:
-    def __init__(self, start_date: datetime, end_date: datetime, workers: int = 3) -> None:
+    def __init__(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+        workers: int = 3,
+        download_dir: str = "bulletins",
+        max_concurrent: int = 5,
+    ) -> None:
+        self.download_dir = download_dir
+        self.max_concurrent = max_concurrent
         self.queue: asyncio.Queue[str | None] = asyncio.Queue()
-        self.collector = LinkCollector(start_date, end_date, self.queue)
-        self.downloader = FileDownloader(queue=self.queue)
+        self.collector = LinkCollector(start_date=start_date, end_date=end_date, queue=self.queue)
+        self.downloader = FileDownloader(download_dir=download_dir, max_concurrent=max_concurrent, queue=self.queue)
         self.workers = workers
         self.scraped_files: list[str] = []
 
