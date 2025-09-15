@@ -1,5 +1,6 @@
 import asyncio
 import os
+from dataclasses import dataclass
 from datetime import datetime
 
 from dotenv import load_dotenv
@@ -26,9 +27,9 @@ sync_engine = create_engine(SYNC_DATABASE_URL)
 
 if not database_exists(sync_engine.url):
     create_database(sync_engine.url)
-    print(f"[MAIN] База {DB_NAME} создана.")
+    print(f"[Main] База {DB_NAME} создана.")
 else:
-    print(f"[MAIN] База {DB_NAME} уже существует.")
+    print(f"[Main] База {DB_NAME} уже существует.")
 
 ASYNC_DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
@@ -37,15 +38,28 @@ engine = create_async_engine(ASYNC_DATABASE_URL, pool_pre_ping=True)
 AsyncSessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False)
 
 
+@dataclass(frozen=True)
+class SpimexConfig:
+    date_start: datetime = datetime(2023, 1, 1)
+    date_end: datetime = datetime.today()
+    directory: str = "bulletins"
+    workers: int = 3
+    max_concurrent: int = 5
+    update_on_conflict: bool = False
+    chunk_size: int = 1000
+
+
+CONFIG = SpimexConfig()
+
+
 async def main():
     async with engine.begin() as conn:
         await conn.run_sync(BaseModel.metadata.create_all)
 
     async with AsyncSessionLocal() as session:
-        start = datetime(2023, 1, 1)
-        end = datetime.today()
-
-        scraper = SpimexScraper(start, end)
+        scraper = SpimexScraper(
+            CONFIG.date_start, CONFIG.date_end, CONFIG.workers, CONFIG.directory, CONFIG.max_concurrent
+        )
         await scraper.scrape()
         files = scraper.scraped_files
 
@@ -53,8 +67,8 @@ async def main():
         parser.parse()
         parsed_df = parser.parsed_df
 
-        loader = SpimexLoader(session, parsed_df)
-        await loader.load(update_on_conflict=False)
+        loader = SpimexLoader(session, parsed_df, CONFIG.update_on_conflict, CONFIG.chunk_size)
+        await loader.load()
 
 
 if __name__ == "__main__":
