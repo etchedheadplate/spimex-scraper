@@ -1,21 +1,11 @@
 from fastapi import FastAPI
-from fastapi.responses import RedirectResponse
 
-from src.api.routes import router
+from src.api.routes import service_router, trades_router
 
-app = FastAPI(title="Spimex API")
+app = FastAPI(title="Spimex Trading API")
 
-app.include_router(router)
-
-
-@app.get("/")
-async def root():
-    return RedirectResponse(url="/docs")
-
-
-@app.get("/ping")
-async def ping():
-    return {"Response": "pong"}
+app.include_router(service_router)
+app.include_router(trades_router)
 
 
 if __name__ == "__main__":
