@@ -1,8 +1,10 @@
+from datetime import date
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class TradingDates(BaseModel):
-    days: int = Field(gt=0, description="Торговые дни")
+    dates: list[date]
 
     model_config = ConfigDict(from_attributes=True)
 
