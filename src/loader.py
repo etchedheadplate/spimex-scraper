@@ -1,4 +1,7 @@
+# pyright: basic
+
 from datetime import datetime
+from typing import cast
 
 import pandas as pd
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,36 +22,37 @@ class SpimexLoader:
         self.update_on_conflict = update_on_conflict
         self.chunk_size = chunk_size
         self.model = SpimexTradingResults
-        if self.df is None:
+        if df is None:
             raise ValueError("[Loader] DataFrame для загрузки отсутствует.")
 
     async def load(self) -> None:
         model_columns = {c.name for c in self.model.__table__.columns}
 
-        df_filtered = self.df.loc[:, self.df.columns.intersection(model_columns)]  # type: ignore
-        df_filtered["date"] = pd.to_datetime(df_filtered["date"]).dt.date  # type: ignore
+        df = cast(pd.DataFrame, self.df)
+        df_filtered = df.loc[:, df.columns.intersection(model_columns)]
+        df_filtered["date"] = pd.to_datetime(df_filtered["date"]).dt.date
 
         now = datetime.now()
-        df_filtered["created_on"] = now  # type: ignore
-        df_filtered["updated_on"] = now  # type: ignore
+        df_filtered["created_on"] = now
+        df_filtered["updated_on"] = now
 
-        df_filtered = df_filtered.where(pd.notnull(df_filtered), None)  # type: ignore
-        total_rows = len(df_filtered)  # type: ignore
+        df_filtered = df_filtered.where(pd.notnull(df_filtered), None)
+        total_rows = len(df_filtered)
         print(f"[Loader] Получено {total_rows} строк для загрузки.")
 
-        records = df_filtered.to_dict(orient="records")  # type: ignore
+        records = df_filtered.to_dict(orient="records")
 
         total_processed = 0
-        for i in range(0, len(records), self.chunk_size):  # type: ignore
-            chunk = records[i : i + self.chunk_size]  # type: ignore
-            chunk_size_actual = len(chunk)  # type: ignore
+        for i in range(0, len(records), self.chunk_size):
+            chunk = records[i : i + self.chunk_size]
+            chunk_size_actual = len(chunk)
 
             try:
                 if self.update_on_conflict:
-                    for record in chunk:  # type: ignore
+                    for record in chunk:
                         await self.session.merge(self.model(**record))
                 else:
-                    objects = [self.model(**record) for record in chunk]  # type: ignore
+                    objects = [self.model(**record) for record in chunk]
                     self.session.add_all(objects)
 
                 await self.session.commit()
