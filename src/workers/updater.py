@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from src.database.connection import AsyncSession, async_engine
+from src.database.connection import async_engine, async_session_maker
 from src.database.models import BaseModel
 from src.workers.loader import SpimexLoader
 from src.workers.parser import SpimexParser
@@ -26,7 +26,7 @@ async def update_database():
     async with async_engine.begin() as conn:
         await conn.run_sync(BaseModel.metadata.create_all)
 
-    async with AsyncSession() as session:
+    async with async_session_maker() as session:
         scraper = SpimexScraper(
             CONFIG.date_start, CONFIG.date_end, CONFIG.workers, CONFIG.directory, CONFIG.max_concurrent
         )
