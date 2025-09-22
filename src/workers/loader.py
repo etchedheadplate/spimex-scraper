@@ -6,7 +6,7 @@ from typing import cast
 import pandas as pd
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models import SpimexTradingResults
+from src.database.models import SpimexTradingResults
 
 
 class SpimexLoader:
