@@ -1,3 +1,5 @@
+# pyright: basic
+
 from typing import Literal
 
 import pandas as pd
@@ -34,33 +36,32 @@ class SpimexParser:
     def create_df(self, file: str) -> pd.DataFrame:
         df = pd.read_excel(file, sheet_name=0, engine=self.engine)  # type: ignore
 
-        date_cell = df.astype(str).stack()[lambda s: s.str.contains(self.date_anchor)].squeeze()  # type: ignore
-        trade_date = pd.to_datetime(  # type: ignore
-            date_cell.replace(self.date_anchor, "").strip(),  # type: ignore
+        date_cell = df.astype(str).stack()[lambda s: s.str.contains(self.date_anchor)].squeeze()
+        trade_date = pd.to_datetime(
+            date_cell.replace(self.date_anchor, "").strip(),
             dayfirst=True,
             errors="raise",
         )
 
-        start_idx = df.isin([self.start_anchor]).any(axis=1).idxmax() + 3  # type: ignore
-        end_idx = (df.iloc[start_idx:].isin([self.end_anchor]).any(axis=1)).idxmax()  # type: ignore
+        start_idx = df.isin([self.start_anchor]).any(axis=1).idxmax() + 3
+        end_idx = (df.iloc[start_idx:].isin([self.end_anchor]).any(axis=1)).idxmax()
 
-        df_table = df.iloc[start_idx:end_idx, list(self.column_idx.values())].reset_index(drop=True)  # type: ignore
+        df_table = df.iloc[start_idx:end_idx, list(self.column_idx.values())].reset_index(drop=True)
         df_table.columns = list(self.column_idx.keys())
 
         df_table = df_table[pd.to_numeric(df_table["count"], errors="coerce").notna()]  # type: ignore
-        df_table = df_table.reset_index(drop=True)  # type: ignore
+        df_table = df_table.reset_index(drop=True)
 
-        # Convert numeric columns to proper integer types
         numeric_columns = ["volume", "total", "count"]
         for col in numeric_columns:
             df_table[col] = pd.to_numeric(df_table[col], errors="coerce").astype("Int64")  # type: ignore
 
         df_table["date"] = trade_date
-        df_table["oil_id"] = df_table["exchange_product_id"].str[:4]  # type: ignore
-        df_table["delivery_basis_id"] = df_table["exchange_product_id"].str[4:7]  # type: ignore
-        df_table["delivery_type_id"] = df_table["exchange_product_id"].str[-1]  # type: ignore
+        df_table["oil_id"] = df_table["exchange_product_id"].str[:4]
+        df_table["delivery_basis_id"] = df_table["exchange_product_id"].str[4:7]
+        df_table["delivery_type_id"] = df_table["exchange_product_id"].str[-1]
 
-        return df_table  # type: ignore
+        return df_table
 
     def parse(self) -> None:
         if self.files is None or len(self.files) == 0:
