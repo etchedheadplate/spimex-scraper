@@ -1,38 +1,19 @@
 [project]
-name = "project-name"
-version = "0.1.0"
-description = "Python project with development tools setup"
 requires-python = ">=3.12"
-authors = [{ name = "Your Name", email = "your.email@example.com" }]
 readme = "README.md"
 license = { text = "MIT" }
-
-[project.optional-dependencies]
-dev = [
-    "black>=24.4.2",
-    "ruff>=0.6.8",
-    "pyright>=1.1.404",
-    "pre-commit>=3.0.0",
-    "pytest>=8.0.0",
-    "pytest-cov>=4.0.0",
-]
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
 
 [tool.black]
 line-length = 120
 target-version = ["py312"]
 include = '\.pyi?$'
 extend-exclude = '''
-# A regex preceded by ^/ will apply only to files and directories
-# in the root of the project.
 (
-  ^/migrations/       # exclude migrations
-  | ^/\.venv/         # exclude virtual environment
-  | ^/build/          # exclude build directory
-  | ^/dist/           # exclude distribution directory
+  ^/migrations/
+  | ^/\.venv/
+  | ^/venv/
+  | ^/build/
+  | ^/dist/
 )
 '''
 
@@ -88,7 +69,7 @@ keep-runtime-typing = true
 
 [tool.pyright]
 include = ["."]
-exclude = ["**/node_modules", "**/__pycache__", ".venv", "build", "dist"]
+exclude = ["**/node_modules", "**/__pycache__", ".venv", "venv", "build", "dist"]
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 reportMissingImports = true
@@ -122,7 +103,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src"]
+source = ["."]
 branch = true
 
 [tool.coverage.report]

@@ -11,6 +11,7 @@ cfgv==3.4.0
 chardet==5.2.0
 charset-normalizer==3.4.3
 click==8.2.1
+coverage==7.10.7
 cssutils==2.11.1
 currency-symbols==2.0.4
 distlib==0.4.0
@@ -22,6 +23,7 @@ frozenlist==1.7.0
 greenlet==3.2.4
 identify==2.6.14
 idna==3.10
+iniconfig==2.1.0
 more-itertools==10.8.0
 multidict==6.6.4
 mypy_extensions==1.1.0
@@ -33,13 +35,18 @@ pandas==2.3.2
 pathspec==0.12.1
 pillow==11.3.0
 platformdirs==4.4.0
+pluggy==1.6.0
 pre_commit==4.3.0
 propcache==0.3.2
 psycopg2==2.9.10
 psycopg2-binary==2.9.10
+Pygments==2.19.2
 pyright==1.1.405
+pytest==8.4.2
+pytest-cov==7.0.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.1
+pytokens==0.1.10
 pytz==2025.2
 PyYAML==6.0.2
 requests==2.32.5
