@@ -1,9 +1,6 @@
-# import asyncio
-import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
-# from src.workers.updater import update_database
 from src.api.routes import router
 
 app = FastAPI(title="Spimex API")
@@ -22,5 +19,8 @@ async def ping():
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", port=8000, host="127.0.0.1", reload=True)
-#    asyncio.run(update_database())
+    import asyncio
+
+    from src.workers.updater import update_database
+
+    asyncio.run(update_database())
