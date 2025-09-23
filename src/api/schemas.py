@@ -28,13 +28,13 @@ class TradingDynamicsSchema(BaseModel):
 
 class TradingDynamicsQuery(BaseModel):
     oil_id: Annotated[str, Field(min_length=4, max_length=4, pattern="^[A-Z0-9]{4}$")] = Field(
-        ..., description="Продукт"
+        ..., description="код биржевого товара"
     )
     delivery_type_id: Annotated[str, Field(min_length=1, max_length=1, pattern="^[A-Z0-9]$")] = Field(
-        ..., description="Тип поставки"
+        ..., description="Условие поставки"
     )
     delivery_basis_id: Annotated[str, Field(min_length=3, max_length=3, pattern="^[A-Z0-9]{3}$")] = Field(
-        ..., description="Базис поставки"
+        ..., description="Код базиса поставки"
     )
     start_date: date = Field(..., description="Начало периода")
     end_date: date = Field(..., description="Конец периода")
@@ -56,11 +56,11 @@ class TradingResultsSchema(BaseModel):
 
 class TradingResultsQuery(BaseModel):
     oil_id: Annotated[str, Field(min_length=4, max_length=4, pattern="^[A-Z0-9]{4}$")] = Field(
-        ..., description="Продукт"
+        ..., description="Код биржевого товара"
     )
     delivery_type_id: Annotated[str, Field(min_length=1, max_length=1, pattern="^[A-Z0-9]$")] = Field(
-        ..., description="Тип поставки"
+        ..., description="Условие поставки"
     )
     delivery_basis_id: Annotated[str, Field(min_length=3, max_length=3, pattern="^[A-Z0-9]{3}$")] = Field(
-        ..., description="Базис поставки"
+        ..., description="Код базиса поставки"
     )
