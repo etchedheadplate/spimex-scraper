@@ -1,10 +1,9 @@
 from fastapi import FastAPI
 
-from src.api.routes import service_router, trades_router
+from src.api.routes import trades_router
 
-app = FastAPI(title="Spimex Trading API")
+app = FastAPI(title="Spimex Trading Results API")
 
-app.include_router(service_router)
 app.include_router(trades_router)
 
 

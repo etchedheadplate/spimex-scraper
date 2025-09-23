@@ -1,27 +1,66 @@
 from datetime import date
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 
 
-class TradingDates(BaseModel):
+class LastTradingDatesSchema(BaseModel):
     dates: list[date]
 
+
+class LastTradingDatesQuery(BaseModel):
+    days: PositiveInt = Field(..., description="Количество дней")
+
+
+class TradingDynamicsSchema(BaseModel):
+    exchange_product_id: str
+    oil_id: str
+    delivery_basis_id: str
+    delivery_basis_name: str
+    delivery_type_id: str
+    volume: int
+    total: int
+    count: int
+    date: date
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TradingDynamicsQuery(BaseModel):
+    oil_id: Annotated[str, Field(min_length=4, max_length=4, pattern="^[A-Z0-9]{4}$")] = Field(
+        ..., description="Продукт"
+    )
+    delivery_type_id: Annotated[str, Field(min_length=1, max_length=1, pattern="^[A-Z0-9]$")] = Field(
+        ..., description="Тип поставки"
+    )
+    delivery_basis_id: Annotated[str, Field(min_length=3, max_length=3, pattern="^[A-Z0-9]{3}$")] = Field(
+        ..., description="Базис поставки"
+    )
+    start_date: date = Field(..., description="Начало периода")
+    end_date: date = Field(..., description="Конец периода")
+
+
+class TradingResultsSchema(BaseModel):
+    exchange_product_id: str
+    oil_id: str
+    delivery_basis_id: str
+    delivery_basis_name: str
+    delivery_type_id: str
+    volume: int
+    total: int
+    count: int
+    date: date
+
     model_config = ConfigDict(from_attributes=True)
 
 
-class TradingDynamics(BaseModel):
-    oil_id: str = Field(description="Продукт")
-    delivery_type_id: str = Field(description="Тип поставки")
-    delivery_basis_id: str = Field(description="Базис поставки")
-    start_date: str = Field(description="Начало периода")
-    end_date: str = Field(description="Конец периода")
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class TradingResults(BaseModel):
-    oil_id: str = Field(description="Продукт")
-    delivery_type_id: str = Field(description="Тип поставки")
-    delivery_basis_id: str = Field(description="Базис поставки")
-
-    model_config = ConfigDict(from_attributes=True)
+class TradingResultsQuery(BaseModel):
+    oil_id: Annotated[str, Field(min_length=4, max_length=4, pattern="^[A-Z0-9]{4}$")] = Field(
+        ..., description="Продукт"
+    )
+    delivery_type_id: Annotated[str, Field(min_length=1, max_length=1, pattern="^[A-Z0-9]$")] = Field(
+        ..., description="Тип поставки"
+    )
+    delivery_basis_id: Annotated[str, Field(min_length=3, max_length=3, pattern="^[A-Z0-9]{3}$")] = Field(
+        ..., description="Базис поставки"
+    )
