@@ -27,15 +27,19 @@ async def update_database():
         await conn.run_sync(BaseModel.metadata.create_all)
 
     async with async_session_maker() as session:
-        scraper = SpimexScraper(
-            CONFIG.date_start, CONFIG.date_end, CONFIG.workers, CONFIG.directory, CONFIG.max_concurrent
-        )
-        await scraper.scrape()
-        files = scraper.scraped_files
+        try:
+            scraper = SpimexScraper(
+                CONFIG.date_start, CONFIG.date_end, CONFIG.workers, CONFIG.directory, CONFIG.max_concurrent
+            )
+            await scraper.scrape()
+            files = scraper.scraped_files
 
-        parser = SpimexParser(files)
-        parser.parse()
-        parsed_df = parser.parsed_df
+            parser = SpimexParser(files)
+            parser.parse()
+            parsed_df = parser.parsed_df
 
-        loader = SpimexLoader(session, parsed_df, CONFIG.update_on_conflict, CONFIG.chunk_size)
-        await loader.load()
+            loader = SpimexLoader(session, parsed_df, CONFIG.update_on_conflict, CONFIG.chunk_size)
+            await loader.load()
+        except Exception:
+            print("[Updater] Ошибка при обновлении базы данных")
+            return
