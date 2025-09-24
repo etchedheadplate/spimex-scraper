@@ -22,8 +22,15 @@ class SpimexLoader:
         self.update_on_conflict = update_on_conflict
         self.chunk_size = chunk_size
         self.model = SpimexTradingResults
-        if df is None:
-            raise ValueError("[Loader] DataFrame для загрузки отсутствует.")
+        try:
+            if df is None:
+                raise ValueError("[Loader] DataFrame для загрузки отсутствует.")
+        except ValueError as e:
+            print(e)
+            return
+        except Exception as e:
+            print(f"[Loader] Ошибка при загрузке данных: {e}")
+            return
 
     async def load(self) -> None:
         model_columns = {c.name for c in self.model.__table__.columns}
