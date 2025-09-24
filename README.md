@@ -16,7 +16,7 @@ DB_PASS = <password>
 
 ## Запуск обновления базы данных
 ```bash
-python3 main.py
+python3 update_db.py
 ```
 
 ## Запуск FastAPI
