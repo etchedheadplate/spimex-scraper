@@ -41,5 +41,5 @@ async def update_database():
             loader = SpimexLoader(session, parsed_df, CONFIG.update_on_conflict, CONFIG.chunk_size)
             await loader.load()
         except Exception:
-            print("[Updater] Ошибка при обновлении базы данных")
+            print("[Updater] Ошибка при обновлении базы данных.")
             return
