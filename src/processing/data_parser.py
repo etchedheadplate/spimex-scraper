@@ -64,8 +64,16 @@ class SpimexParser:
         return df_table
 
     def parse(self) -> None:
-        if self.files is None or len(self.files) == 0:
-            raise ValueError("[Parser] Файлы для парсинга отсутствуют.")
+        try:
+            if self.files is None or len(self.files) == 0:
+                raise ValueError("[Parser] Файлы для парсинга отсутствуют.")
+            print(f"[Parser] Получено {len(self.files)} файлов.")
+        except ValueError as e:
+            print(e)
+            return
+        except Exception as e:
+            print(f"[Parser] Ошибка при проверке файлов: {e}")
+            return
 
         print(f"[Parser] Получено {len(self.files)} файлов.")
         df_list = [self.create_df(f) for f in self.files]
@@ -73,9 +81,3 @@ class SpimexParser:
         print(f"[Parser] Отпарсено {len(combined_df)} строк.")
 
         self.parsed_df = combined_df
-
-
-if __name__ == "__main__":
-    parser = SpimexParser()
-    table = parser.parse()
-    print(table)
