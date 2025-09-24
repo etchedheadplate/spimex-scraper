@@ -3,9 +3,9 @@ from datetime import datetime
 
 from src.database.connection import async_engine, async_session_maker
 from src.database.models import BaseModel
-from src.workers.loader import SpimexLoader
-from src.workers.parser import SpimexParser
-from src.workers.scraper import SpimexScraper
+from src.processing.loader import SpimexLoader
+from src.processing.parser import SpimexParser
+from src.processing.scraper import SpimexScraper
 
 
 @dataclass(frozen=True)

@@ -12,6 +12,6 @@ app.include_router(api_v1)
 if __name__ == "__main__":
     import asyncio
 
-    from src.workers.updater import update_database
+    from src.processing.updater import update_database
 
     asyncio.run(update_database())
