@@ -1,7 +1,10 @@
+import json
 from collections.abc import AsyncGenerator
 from datetime import date, timedelta
+from typing import Any
 
-from fastapi import Query
+import redis.asyncio as redis
+from fastapi import Query, Request
 from pydantic import PositiveInt
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,6 +14,25 @@ from src.api.schemas import (
     TradingResultsQuery,
 )
 from src.database.connection import async_session_maker
+
+redis_client: redis.Redis = redis.Redis(host="127.0.0.1", port=6379, db=0, encoding="utf-8", decode_responses=True)
+
+
+def get_cache_key(request: Request) -> str:
+    return f"cache:{request.url.path}?{request.url.query}"
+
+
+async def get_from_cache(request: Request):
+    key = get_cache_key(request)
+    data = await redis_client.get(key)
+    if data:
+        return json.loads(data)
+    return None
+
+
+async def set_cache(request: Request, response_data: Any):
+    key = get_cache_key(request)
+    await redis_client.set(key, json.dumps(response_data))
 
 
 async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
