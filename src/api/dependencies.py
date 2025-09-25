@@ -25,17 +25,17 @@ def last_trading_days_query(
 
 
 def trading_dynamics_query(
-    oil_id: str = Query(
-        ..., min_length=4, max_length=4, pattern="^[A-Z0-9]{4}$", description="Код биржевого товара", example="A692"
-    ),
-    delivery_type_id: str = Query(
-        ..., min_length=1, max_length=1, pattern="^[A-Z0-9]$", description="Условие поставки", example="A"
-    ),
-    delivery_basis_id: str = Query(
-        ..., min_length=3, max_length=3, pattern="^[A-Z0-9]{3}$", description="Код базиса поставки", example="ACH"
-    ),
     start_date: date = Query(..., description="Начало периода", example=(date.today() - timedelta(days=7)).isoformat()),
     end_date: date = Query(..., description="Конец периода", example=date.today().isoformat()),
+    oil_id: str | None = Query(
+        None, min_length=4, max_length=4, pattern="^[A-Z0-9]{4}$", description="Код биржевого товара", example="A692"
+    ),
+    delivery_type_id: str | None = Query(
+        None, min_length=1, max_length=1, pattern="^[A-Z0-9]$", description="Условие поставки", example="A"
+    ),
+    delivery_basis_id: str | None = Query(
+        None, min_length=3, max_length=3, pattern="^[A-Z0-9]{3}$", description="Код базиса поставки", example="ACH"
+    ),
 ) -> TradingDynamicsQuery:
     return TradingDynamicsQuery(
         oil_id=oil_id,
@@ -47,14 +47,14 @@ def trading_dynamics_query(
 
 
 def trading_results_query(
-    oil_id: str = Query(
-        ..., min_length=4, max_length=4, pattern="^[A-Z0-9]{4}$", description="Код биржевого товара", example="A692"
+    oil_id: str | None = Query(
+        None, min_length=4, max_length=4, pattern="^[A-Z0-9]{4}$", description="Код биржевого товара", example="A692"
     ),
-    delivery_type_id: str = Query(
-        ..., min_length=1, max_length=1, pattern="^[A-Z0-9]$", description="Условие поставки", example="A"
+    delivery_type_id: str | None = Query(
+        None, min_length=1, max_length=1, pattern="^[A-Z0-9]$", description="Условие поставки", example="A"
     ),
-    delivery_basis_id: str = Query(
-        ..., min_length=3, max_length=3, pattern="^[A-Z0-9]{3}$", description="Код базиса поставки", example="ACH"
+    delivery_basis_id: str | None = Query(
+        None, min_length=3, max_length=3, pattern="^[A-Z0-9]{3}$", description="Код базиса поставки", example="ACH"
     ),
 ) -> TradingResultsQuery:
     return TradingResultsQuery(
