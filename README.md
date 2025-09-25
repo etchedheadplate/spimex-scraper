@@ -14,9 +14,17 @@ DB_USER = <username>
 DB_PASS = <password>
 ```
 
-## Запуск обновления базы данных
+## Запуск обновления БД
 ```bash
-python3 update_db.py
+python -m src.scripts.update_db
+```
+
+## Запуск Celery
+```bash
+celery -A src.worker.app.celery_app worker --loglevel=info
+```
+```bash
+celery -A src.worker.app.celery_app beat --loglevel=info
 ```
 
 ## Запуск FastAPI
