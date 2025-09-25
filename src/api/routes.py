@@ -6,9 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.dependencies import (
     get_async_db,
-    get_from_cache,
     last_trading_days_query,
-    set_cache,
     trading_dynamics_query,
     trading_results_query,
 )
@@ -20,6 +18,7 @@ from src.api.schemas import (
     TradingResultsQuery,
     TradingResultsSchema,
 )
+from src.cache import get_from_cache, set_cache
 from src.database.models import SpimexTradingResults as TradingModel
 
 trades_router = APIRouter(prefix="/trades", tags=["trades"])
