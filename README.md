@@ -2,6 +2,7 @@
 ```bash
 git clone https://github.com/etchedheadplate/spimex-scraper.git
 cd spimex-scraper
+python -m venv .venv
 pip install -r requirements.txt
 ```
 
