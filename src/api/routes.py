@@ -43,15 +43,19 @@ async def get_dynamics(
     query: TradingDynamicsQuery = Depends(trading_dynamics_query),
     db: AsyncSession = Depends(get_async_db),
 ):
-    stmt = select(TradingModel).where(
-        and_(
-            TradingModel.oil_id == query.oil_id,
-            TradingModel.delivery_type_id == query.delivery_type_id,
-            TradingModel.delivery_basis_id == query.delivery_basis_id,
-            TradingModel.date >= query.start_date,
-            TradingModel.date <= query.end_date,
-        )
-    )
+    filters = [
+        TradingModel.date >= query.start_date,
+        TradingModel.date <= query.end_date,
+    ]
+
+    if query.oil_id is not None:
+        filters.append(TradingModel.oil_id == query.oil_id)
+    if query.delivery_type_id is not None:
+        filters.append(TradingModel.delivery_type_id == query.delivery_type_id)
+    if query.delivery_basis_id is not None:
+        filters.append(TradingModel.delivery_basis_id == query.delivery_basis_id)
+
+    stmt = select(TradingModel).where(and_(*filters))
 
     result = await db.scalars(stmt)
     return result.all()
@@ -69,13 +73,18 @@ async def get_trading_results(
 ):
     latest_date = await db.scalar(select(func.max(TradingModel.date)))
 
-    stmt = select(TradingModel).where(
-        and_(
-            TradingModel.date == latest_date,
-            TradingModel.oil_id == query.oil_id,
-            TradingModel.delivery_type_id == query.delivery_type_id,
-            TradingModel.delivery_basis_id == query.delivery_basis_id,
-        )
-    )
+    filters = [
+        TradingModel.date == latest_date,
+    ]
+
+    if query.oil_id is not None:
+        filters.append(TradingModel.oil_id == query.oil_id)
+    if query.delivery_type_id is not None:
+        filters.append(TradingModel.delivery_type_id == query.delivery_type_id)
+    if query.delivery_basis_id is not None:
+        filters.append(TradingModel.delivery_basis_id == query.delivery_basis_id)
+
+    stmt = select(TradingModel).where(and_(*filters))
+
     result = await db.scalars(stmt)
     return result.all()

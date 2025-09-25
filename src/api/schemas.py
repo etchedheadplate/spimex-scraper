@@ -40,14 +40,14 @@ class LastTradingDatesQuery(BaseModel):
 
 
 class TradingDynamicsQuery(BaseModel):
-    oil_id: str
-    delivery_type_id: str
-    delivery_basis_id: str
     start_date: date
     end_date: date
+    oil_id: str | None = None
+    delivery_type_id: str | None = None
+    delivery_basis_id: str | None = None
 
 
 class TradingResultsQuery(BaseModel):
-    oil_id: str
-    delivery_type_id: str
-    delivery_basis_id: str
+    oil_id: str | None = None
+    delivery_type_id: str | None = None
+    delivery_basis_id: str | None = None
