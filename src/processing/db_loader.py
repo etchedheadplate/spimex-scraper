@@ -1,10 +1,11 @@
 # pyright: basic
 
+import asyncio
 from datetime import datetime
 from typing import cast
 
 import pandas as pd
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.database.models import SpimexTradingResults
 
@@ -12,15 +13,17 @@ from src.database.models import SpimexTradingResults
 class SpimexLoader:
     def __init__(
         self,
-        session: AsyncSession,
+        sessionmaker: async_sessionmaker[AsyncSession],
         df: pd.DataFrame | None = None,
         update_on_conflict: bool = False,
         chunk_size: int = 1000,
+        max_parallel_chunks: int = 5,
     ) -> None:
-        self.session = session
+        self.sessionmaker = sessionmaker
         self.df = df
         self.update_on_conflict = update_on_conflict
         self.chunk_size = chunk_size
+        self.max_parallel_chunks = max_parallel_chunks
         self.model = SpimexTradingResults
         try:
             if df is None:
@@ -49,29 +52,32 @@ class SpimexLoader:
 
         records = df_filtered.to_dict(orient="records")
 
-        total_processed = 0
-        for i in range(0, len(records), self.chunk_size):
-            chunk = records[i : i + self.chunk_size]
-            chunk_size_actual = len(chunk)
+        sem = asyncio.Semaphore(self.max_parallel_chunks)
 
-            try:
-                if self.update_on_conflict:
-                    for record in chunk:
-                        await self.session.merge(self.model(**record))
-                else:
-                    objects = [self.model(**record) for record in chunk]
-                    self.session.add_all(objects)
+        async def process_chunk(idx: int, chunk: list[dict]) -> int:
+            async with sem, self.sessionmaker() as session:
+                try:
+                    if self.update_on_conflict:
+                        for record in chunk:
+                            await session.merge(self.model(**record))
+                    else:
+                        objects = [self.model(**record) for record in chunk]
+                        session.add_all(objects)
 
-                await self.session.commit()
-                total_processed += chunk_size_actual
-                print(
-                    f"[Loader] Загружен чанк {i//self.chunk_size + 1}: {chunk_size_actual} строк."
-                    f"Всего обработано: {total_processed}/{total_rows} ({total_processed/total_rows*100:.1f}%)"
-                )
+                    await session.commit()
+                    print(f"[Loader] Загружен чанк {idx + 1}: {len(chunk)} строк.")
+                    return len(chunk)
+                except Exception as e:
+                    await session.rollback()
+                    print(f"[Loader] Ошибка при загрузке чанка {idx + 1}: {e}")
+                    raise
 
-            except Exception as e:
-                await self.session.rollback()
-                print(f"[Loader] Ошибка при загрузке чанка {i//self.chunk_size + 1}: {e}")
-                raise
+        tasks = []
+        for row in range(0, len(records), self.chunk_size):
+            chunk = records[row : row + self.chunk_size]
+            tasks.append(process_chunk(row // self.chunk_size, chunk))
+
+        results = await asyncio.gather(*tasks)
+        total_processed = sum(results)
 
         print(f"[Loader] Успешно загружено {total_processed} строк.")

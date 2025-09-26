@@ -16,7 +16,8 @@ class UpdaterConfig:
     workers: int = 3
     max_concurrent: int = 5
     update_on_conflict: bool = False
-    chunk_size: int = 1000
+    chunk_size: int = 5000
+    max_parallel_chunks: int = 5
 
 
 CONFIG = UpdaterConfig()
@@ -26,20 +27,21 @@ async def update_database():
     async with async_engine.begin() as conn:
         await conn.run_sync(BaseModel.metadata.create_all)
 
-    async with async_session_maker() as session:
-        try:
-            scraper = SpimexScraper(
-                CONFIG.date_start, CONFIG.date_end, CONFIG.workers, CONFIG.directory, CONFIG.max_concurrent
-            )
-            await scraper.scrape()
-            files = scraper.scraped_files
+    try:
+        scraper = SpimexScraper(
+            CONFIG.date_start, CONFIG.date_end, CONFIG.workers, CONFIG.directory, CONFIG.max_concurrent
+        )
+        await scraper.scrape()
+        files = scraper.scraped_files
 
-            parser = SpimexParser(files)
-            parser.parse()
-            parsed_df = parser.parsed_df
+        parser = SpimexParser(files)
+        parser.parse()
+        parsed_df = parser.parsed_df
 
-            loader = SpimexLoader(session, parsed_df, CONFIG.update_on_conflict, CONFIG.chunk_size)
-            await loader.load()
-        except Exception:
-            print("[Updater] Ошибка при обновлении базы данных.")
-            return
+        loader = SpimexLoader(
+            async_session_maker, parsed_df, CONFIG.update_on_conflict, CONFIG.chunk_size, CONFIG.max_parallel_chunks
+        )
+        await loader.load()
+    except Exception:
+        print("[Updater] Ошибка при обновлении базы данных.")
+        return
