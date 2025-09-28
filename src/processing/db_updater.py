@@ -14,7 +14,7 @@ class UpdaterConfig:
     date_start: datetime = datetime(2023, 1, 1)
     date_end: datetime = datetime.today()
     directory: str = "bulletins"
-    workers: int = 3
+    workers: int = 20
     max_concurrent: int = 5
     update_on_conflict: bool = False
     chunk_size: int = 5000
