@@ -76,11 +76,12 @@ class FileDownloader:
         self,
         download_dir: str,
         max_concurrent: int,
-        queue: asyncio.Queue[str | None] | None = None,
+        queue: asyncio.Queue[str | None],
     ) -> None:
         self.download_dir = download_dir
         self.max_concurrent = max_concurrent
-        self.queue = queue or asyncio.Queue()
+        self.sem = asyncio.Semaphore(self.max_concurrent)
+        self.queue = queue
         os.makedirs(download_dir, exist_ok=True)
         self.downloaded_files: list[str] = []
 
@@ -107,21 +108,20 @@ class FileDownloader:
             print(f"[Downloader] Ошибка при скачивании {url}: {e}")
 
     async def consume_queue(self, worker_id: int = 1) -> None:
-        sem = asyncio.Semaphore(self.max_concurrent)
         async with aiohttp.ClientSession() as session:
             while True:
                 url = await self.queue.get()
                 if url is None:
-                    print(f"[Downloader-{worker_id}] Получен сигнал завершения. Остановка.")
+                    print(f"[Worker-{worker_id}] Получен сигнал завершения. Остановка.")
                     self.queue.task_done()
                     break
 
-                print(f"[Downloader-{worker_id}] Взял из очереди: {url}")
-                async with sem:
+                print(f"[Worker-{worker_id}] Взял из очереди: {url}")
+                async with self.sem:
                     await self._download_file(session, url)
 
                 self.queue.task_done()
-                print(f"[Downloader-{worker_id}] Завершил обработку: {url}")
+                print(f"[Worker-{worker_id}] Завершил обработку: {url}")
 
 
 class SpimexScraper:

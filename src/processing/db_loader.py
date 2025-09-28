@@ -56,6 +56,7 @@ class SpimexLoader:
 
         async def process_chunk(idx: int, chunk: list[dict]) -> int:
             async with sem, self.sessionmaker() as session:
+                print(f"[Loader] Получен чанк {idx + 1}: {len(chunk)} строк.")
                 try:
                     if self.update_on_conflict:
                         for record in chunk:
