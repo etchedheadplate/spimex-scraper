@@ -42,6 +42,8 @@ class LinkCollector:
                     timestamp_str = match.group(1)
                     file_date = datetime.strptime(timestamp_str, "%Y%m%d%H%M%S")
                     if self.start_date <= file_date <= self.end_date:
+                        query_index = href.find("?")
+                        href = href[:query_index] if query_index != -1 else href
                         full_url = urljoin(self.base_url, href)
                         print(f"[Collector] Найдена ссылка: {full_url}")
                         links.append(full_url)
