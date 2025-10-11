@@ -25,11 +25,17 @@ from src.logger import logger
 trades_router = APIRouter(prefix="/trades", tags=["trades"])
 
 
+@trades_router.get("/ping", name="ping")
+async def ping():
+    return {"status": "ok"}
+
+
 @trades_router.get(
     "/dates",
     response_model=LastTradingDatesSchema,
     summary="Список дат последних торговых дней",
     description="Возвращает список дат, в которые велись торги",
+    name="get_dates",
 )
 async def get_last_trading_dates(
     request: Request,
@@ -57,6 +63,7 @@ async def get_last_trading_dates(
     response_model=list[TradingDynamicsSchema],
     summary="Список торгов за заданный период",
     description="Возвращает список торговых позиций с включением начальной и конечной дат периода",
+    name="get_dynamics",
 )
 async def get_dynamics(
     request: Request,
@@ -103,6 +110,7 @@ async def get_dynamics(
     response_model=list[TradingResultsSchema],
     summary="Список последних торгов",
     description="Возвращает список с параметрами торговой позиции за последний торговый день",
+    name="get_results",
 )
 async def get_trading_results(
     request: Request,
