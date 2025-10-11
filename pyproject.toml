@@ -86,10 +86,14 @@ reportUnnecessaryTypeIgnoreComment = "warning"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = [".", "src"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+env_files = [".test_env"]
+asyncio_mode = "auto"
 addopts = [
+    "-vv",
     "--strict-markers",
     "--strict-config",
     "--cov=src",
