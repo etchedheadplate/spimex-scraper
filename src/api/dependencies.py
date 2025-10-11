@@ -1,5 +1,5 @@
 from collections.abc import AsyncGenerator
-from datetime import date, timedelta
+from datetime import date
 
 from fastapi import Query
 from pydantic import PositiveInt
@@ -19,22 +19,22 @@ async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 def last_trading_days_query(
-    days: PositiveInt = Query(..., description="Количество торговых дней", example=5)
+    days: PositiveInt = Query(..., description="Количество торговых дней")
 ) -> LastTradingDatesQuery:
     return LastTradingDatesQuery(days=days)
 
 
 def trading_dynamics_query(
-    start_date: date = Query(..., description="Начало периода", example=(date.today() - timedelta(days=7)).isoformat()),
-    end_date: date = Query(..., description="Конец периода", example=date.today().isoformat()),
+    start_date: date = Query(..., description="Начало периода"),
+    end_date: date = Query(..., description="Конец периода"),
     oil_id: str | None = Query(
-        None, min_length=4, max_length=4, pattern="^[A-Z0-9]{4}$", description="Код биржевого товара", example="A692"
+        None, min_length=4, max_length=4, pattern="^[A-Z0-9]{4}$", description="Код биржевого товара"
     ),
     delivery_type_id: str | None = Query(
-        None, min_length=1, max_length=1, pattern="^[A-Z0-9]$", description="Условие поставки", example="A"
+        None, min_length=1, max_length=1, pattern="^[A-Z0-9]$", description="Условие поставки"
     ),
     delivery_basis_id: str | None = Query(
-        None, min_length=3, max_length=3, pattern="^[A-Z0-9]{3}$", description="Код базиса поставки", example="ACH"
+        None, min_length=3, max_length=3, pattern="^[A-Z0-9]{3}$", description="Код базиса поставки"
     ),
 ) -> TradingDynamicsQuery:
     return TradingDynamicsQuery(
@@ -48,13 +48,13 @@ def trading_dynamics_query(
 
 def trading_results_query(
     oil_id: str | None = Query(
-        None, min_length=4, max_length=4, pattern="^[A-Z0-9]{4}$", description="Код биржевого товара", example="A692"
+        None, min_length=4, max_length=4, pattern="^[A-Z0-9]{4}$", description="Код биржевого товара"
     ),
     delivery_type_id: str | None = Query(
-        None, min_length=1, max_length=1, pattern="^[A-Z0-9]$", description="Условие поставки", example="A"
+        None, min_length=1, max_length=1, pattern="^[A-Z0-9]$", description="Условие поставки"
     ),
     delivery_basis_id: str | None = Query(
-        None, min_length=3, max_length=3, pattern="^[A-Z0-9]{3}$", description="Код базиса поставки", example="ACH"
+        None, min_length=3, max_length=3, pattern="^[A-Z0-9]{3}$", description="Код базиса поставки"
     ),
 ) -> TradingResultsQuery:
     return TradingResultsQuery(
