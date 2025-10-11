@@ -4,6 +4,7 @@ from datetime import datetime
 
 from src.database.connection import async_engine, async_session_maker
 from src.database.models import BaseModel
+from src.logger import logger
 from src.processing.data_parser import SpimexParser
 from src.processing.data_scraper import SpimexScraper
 from src.processing.db_loader import SpimexLoader
@@ -53,10 +54,10 @@ async def update_database():
         end_load = time.perf_counter()
         load_time = end_load - start_load
 
-        print(f"[Timer] Скрапинг: {scrape_time:.2f} секунд.")
-        print(f"[Timer] Парсинг: {parse_time:.2f} секунд.")
-        print(f"[Timer] Загрузка: {load_time:.2f} секунд.")
-        print(f"[Timer] Всего: {scrape_time + parse_time + load_time:.2f} секунд.")
+        logger.info(f"[Timer] Скрапинг: {scrape_time:.2f} секунд.")
+        logger.info(f"[Timer] Парсинг: {parse_time:.2f} секунд.")
+        logger.info(f"[Timer] Загрузка: {load_time:.2f} секунд.")
+        logger.info(f"[Timer] Всего: {scrape_time + parse_time + load_time:.2f} секунд.")
     except Exception:
-        print("[Updater] Ошибка при обновлении базы данных.")
+        logger.info("[Updater] Ошибка при обновлении базы данных.")
         return

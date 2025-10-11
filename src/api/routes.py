@@ -20,6 +20,7 @@ from src.api.schemas import (
 )
 from src.cache import get_from_cache, set_cache
 from src.database.models import SpimexTradingResults as TradingModel
+from src.logger import logger
 
 trades_router = APIRouter(prefix="/trades", tags=["trades"])
 
@@ -38,7 +39,7 @@ async def get_last_trading_dates(
     cached = await get_from_cache(request)
     if cached:
         cached_data = [date.fromisoformat(d) for d in cached]
-        print(f"Got from cache {len(cached_data)} items")
+        logger.info(f"Got from cache {len(cached_data)} items")
         return {"dates": cached_data, "cached": True}
 
     stmt = select(TradingModel.date).distinct().order_by(TradingModel.date.desc()).limit(query.days)
@@ -47,7 +48,7 @@ async def get_last_trading_dates(
     data_to_cache = [d.isoformat() for d in result_data]
 
     await set_cache(request, data_to_cache)
-    print(f"Set to cache {len(data_to_cache)} items")
+    logger.info(f"Set to cache {len(data_to_cache)} items")
     return LastTradingDatesSchema(dates=result_data)
 
 
@@ -65,7 +66,7 @@ async def get_dynamics(
     cached = await get_from_cache(request)
     if cached:
         cached_data = [TradingDynamicsSchema.model_validate(item) for item in cached]
-        print(f"Got from cache {len(cached_data)} items")
+        logger.info(f"Got from cache {len(cached_data)} items")
         return cached_data
 
     filters = [
@@ -93,7 +94,7 @@ async def get_dynamics(
     ]
 
     await set_cache(request, data_to_cache)
-    print(f"Set to cache {len(data_to_cache)} items")
+    logger.info(f"Set to cache {len(data_to_cache)} items")
     return [TradingDynamicsSchema.model_validate(item) for item in result_data]
 
 
@@ -111,7 +112,7 @@ async def get_trading_results(
     cached = await get_from_cache(request)
     if cached:
         cached_data = [TradingResultsSchema.model_validate(item) for item in cached]
-        print(f"Got from cache {len(cached_data)} items")
+        logger.info(f"Got from cache {len(cached_data)} items")
         return cached_data
 
     latest_date = await db.scalar(select(func.max(TradingModel.date)))
@@ -140,5 +141,5 @@ async def get_trading_results(
     ]
 
     await set_cache(request, data_to_cache)
-    print(f"Set to cache {len(data_to_cache)} items")
+    logger.info(f"Set to cache {len(data_to_cache)} items")
     return [TradingResultsSchema.model_validate(item) for item in result_data]

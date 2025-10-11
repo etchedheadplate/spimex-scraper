@@ -8,6 +8,7 @@ import pandas as pd
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.database.models import SpimexTradingResults
+from src.logger import logger
 
 
 class SpimexLoader:
@@ -29,10 +30,10 @@ class SpimexLoader:
             if df is None:
                 raise ValueError("[Loader] DataFrame для загрузки отсутствует.")
         except ValueError as e:
-            print(e)
+            logger.info(e)
             return
         except Exception as e:
-            print(f"[Loader] Ошибка при загрузке данных: {e}")
+            logger.info(f"[Loader] Ошибка при загрузке данных: {e}")
             return
 
     async def load(self) -> None:
@@ -48,7 +49,7 @@ class SpimexLoader:
 
         df_filtered = df_filtered.where(pd.notnull(df_filtered), None)
         total_rows = len(df_filtered)
-        print(f"[Loader] Получено {total_rows} строк для загрузки.")
+        logger.info(f"[Loader] Получено {total_rows} строк для загрузки.")
 
         records = df_filtered.to_dict(orient="records")
 
@@ -56,7 +57,7 @@ class SpimexLoader:
 
         async def process_chunk(idx: int, chunk: list[dict]) -> int:
             async with sem, self.sessionmaker() as session:
-                print(f"[Loader] Получен чанк {idx + 1}: {len(chunk)} строк.")
+                logger.info(f"[Loader] Получен чанк {idx + 1}: {len(chunk)} строк.")
                 try:
                     if self.update_on_conflict:
                         for record in chunk:
@@ -66,11 +67,11 @@ class SpimexLoader:
                         session.add_all(objects)
 
                     await session.commit()
-                    print(f"[Loader] Загружен чанк {idx + 1}: {len(chunk)} строк.")
+                    logger.info(f"[Loader] Загружен чанк {idx + 1}: {len(chunk)} строк.")
                     return len(chunk)
                 except Exception as e:
                     await session.rollback()
-                    print(f"[Loader] Ошибка при загрузке чанка {idx + 1}: {e}")
+                    logger.info(f"[Loader] Ошибка при загрузке чанка {idx + 1}: {e}")
                     raise
 
         tasks = []
@@ -81,4 +82,4 @@ class SpimexLoader:
         results = await asyncio.gather(*tasks)
         total_processed = sum(results)
 
-        print(f"[Loader] Успешно загружено {total_processed} строк.")
+        logger.info(f"[Loader] Успешно загружено {total_processed} строк.")

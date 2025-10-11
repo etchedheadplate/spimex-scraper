@@ -4,6 +4,8 @@ from typing import Literal
 
 import pandas as pd
 
+from src.logger import logger
+
 
 class SpimexParser:
     def __init__(
@@ -67,17 +69,17 @@ class SpimexParser:
         try:
             if self.files is None or len(self.files) == 0:
                 raise ValueError("[Parser] Файлы для парсинга отсутствуют.")
-            print(f"[Parser] Получено {len(self.files)} файлов.")
+            logger.info(f"[Parser] Получено {len(self.files)} файлов.")
         except ValueError as e:
-            print(e)
+            logger.info(e)
             return
         except Exception as e:
-            print(f"[Parser] Ошибка при проверке файлов: {e}")
+            logger.info(f"[Parser] Ошибка при проверке файлов: {e}")
             return
 
-        print(f"[Parser] Получено {len(self.files)} файлов.")
+        logger.info(f"[Parser] Получено {len(self.files)} файлов.")
         df_list = [self.create_df(f) for f in self.files]
         combined_df = pd.concat(df_list, ignore_index=True)
-        print(f"[Parser] Отпарсено {len(combined_df)} строк.")
+        logger.info(f"[Parser] Отпарсено {len(combined_df)} строк.")
 
         self.parsed_df = combined_df

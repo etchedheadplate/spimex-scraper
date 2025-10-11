@@ -8,6 +8,8 @@ import aiofiles
 import aiohttp
 from bs4 import BeautifulSoup, Tag
 
+from src.logger import logger
+
 
 class LinkCollector:
     def __init__(self, start_date: datetime, end_date: datetime, queue: asyncio.Queue[str | None]) -> None:
@@ -18,15 +20,15 @@ class LinkCollector:
         self.queue = queue
 
     async def _extract_links(self, session: aiohttp.ClientSession, url: str) -> list[str]:
-        print(f"[Collector] Загружаю страницу: {url}")
+        logger.info(f"[Collector] Загружаю страницу: {url}")
         try:
             async with session.get(url) as resp:
                 if resp.status != 200:
-                    print(f"[Collector] Ошибка {resp.status} при загрузке {url}")
+                    logger.info(f"[Collector] Ошибка {resp.status} при загрузке {url}")
                     return []
                 text = await resp.text()
         except Exception as e:
-            print(f"[Collector] Ошибка при запросе {url}: {e}")
+            logger.info(f"[Collector] Ошибка при запросе {url}: {e}")
             return []
 
         soup = BeautifulSoup(text, "html.parser")
@@ -45,7 +47,7 @@ class LinkCollector:
                         query_index = href.find("?")
                         href = href[:query_index] if query_index != -1 else href
                         full_url = urljoin(self.base_url, href)
-                        print(f"[Collector] Найдена ссылка: {full_url}")
+                        logger.info(f"[Collector] Найдена ссылка: {full_url}")
                         links.append(full_url)
         return links
 
@@ -58,19 +60,19 @@ class LinkCollector:
                 url = self.start_page + (f"?page=page-{page}" if page > 1 else "")
                 page_links = await self._extract_links(session, url)
                 if not page_links:
-                    print(f"[Collector] На странице {page} ссылки не найдены. Остановка.")
+                    logger.info(f"[Collector] На странице {page} ссылки не найдены. Остановка.")
                     break
 
                 for link in page_links:
                     await self.queue.put(link)
                     count += 1
-                    print(f"[Collector] Ссылка добавлена в очередь: {link}")
+                    logger.info(f"[Collector] Ссылка добавлена в очередь: {link}")
 
                 page += 1
 
         for _ in range(workers):
             await self.queue.put(None)
-        print(f"[Collector] Всего добавлено {count} ссылок. В очередь отправлены сигналы завершения.")
+        logger.info(f"[Collector] Всего добавлено {count} ссылок. В очередь отправлены сигналы завершения.")
 
 
 class FileDownloader:
@@ -92,38 +94,38 @@ class FileDownloader:
         filepath = os.path.join(self.download_dir, filename)
 
         if os.path.exists(filepath):
-            print(f"[Downloader] Файл уже существует: {filepath}, пропускаем.")
+            logger.info(f"[Downloader] Файл уже существует: {filepath}, пропускаем.")
             return
 
-        print(f"[Downloader] Начинаю скачивание: {url}")
+        logger.info(f"[Downloader] Начинаю скачивание: {url}")
         try:
             async with session.get(url) as resp:
                 if resp.status == 200:
                     async with aiofiles.open(filepath, "wb") as f:
                         async for chunk in resp.content.iter_chunked(8192):
                             await f.write(chunk)
-                    print(f"[Downloader] Успешно скачан файл: {filepath}")
+                    logger.info(f"[Downloader] Успешно скачан файл: {filepath}")
                     self.downloaded_files.append(filepath)
                 else:
-                    print(f"[Downloader] Ошибка {resp.status} при скачивании {url}")
+                    logger.info(f"[Downloader] Ошибка {resp.status} при скачивании {url}")
         except Exception as e:
-            print(f"[Downloader] Ошибка при скачивании {url}: {e}")
+            logger.info(f"[Downloader] Ошибка при скачивании {url}: {e}")
 
     async def consume_queue(self, worker_id: int = 1) -> None:
         async with aiohttp.ClientSession() as session:
             while True:
                 url = await self.queue.get()
                 if url is None:
-                    print(f"[Worker-{worker_id}] Получен сигнал завершения. Остановка.")
+                    logger.info(f"[Worker-{worker_id}] Получен сигнал завершения. Остановка.")
                     self.queue.task_done()
                     break
 
-                print(f"[Worker-{worker_id}] Взял из очереди: {url}")
+                logger.info(f"[Worker-{worker_id}] Взял из очереди: {url}")
                 async with self.sem:
                     await self._download_file(session, url)
 
                 self.queue.task_done()
-                print(f"[Worker-{worker_id}] Завершил обработку: {url}")
+                logger.info(f"[Worker-{worker_id}] Завершил обработку: {url}")
 
 
 class SpimexScraper:
@@ -143,7 +145,7 @@ class SpimexScraper:
         self.scraped_files: list[str] = []
 
     async def scrape(self) -> None:
-        print("[Scraper] Запуск producer (сбор ссылок) и consumers (скачивание).")
+        logger.info("[Scraper] Запуск producer (сбор ссылок) и consumers (скачивание).")
 
         producer = asyncio.create_task(self.collector.collect_links(self.workers))
         consumers = [
@@ -153,5 +155,5 @@ class SpimexScraper:
         await asyncio.gather(producer, *consumers)
 
         self.scraped_files = self.downloader.downloaded_files.copy()
-        print(f"[Scraper] Всего загружено {len(self.scraped_files)} файлов в директорию {self.download_dir}.")
-        print("[Scraper] Все задачи завершены.")
+        logger.info(f"[Scraper] Всего загружено {len(self.scraped_files)} файлов в директорию {self.download_dir}.")
+        logger.info("[Scraper] Все задачи завершены.")
