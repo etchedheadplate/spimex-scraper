@@ -1,34 +1,32 @@
 ## Установка
 ```bash
-git clone https://github.com/etchedheadplate/spimex-scraper.git
+git clone -b develop https://github.com/etchedheadplate/spimex-scraper.git
 cd spimex-scraper
 python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
 ## .env
 ```
-DB_NAME = <name>
-DB_HOST = <host>
-DB_PORT = <port>
-DB_USER = <username>
-DB_PASS = <password>
+DB_NAME=your_db_name_here
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=your_username_here
+DB_PASS=your_password_here
 ```
 
-## Запуск обновления БД
+## Обновление БД
 ```bash
 python -m src.scripts.update_db
 ```
 
-## Запуск Celery
+## Celery
 ```bash
-celery -A src.worker.app.celery_app worker --loglevel=info
-```
-```bash
-celery -A src.worker.app.celery_app beat --loglevel=info
+celery -A src.worker.app.celery_app worker --beat --loglevel=info
 ```
 
-## Запуск FastAPI
+## FastAPI
 ```bash
 uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
