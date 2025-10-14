@@ -18,7 +18,7 @@ from src.api.schemas import (
     TradingResultsSchema,
 )
 from src.cache import get_from_cache, set_cache
-from src.database.connection import get_async_db
+from src.database.dependencies import get_async_db
 from src.database.models import SpimexTradingResults as TradingModel
 from src.logger import logger
 
