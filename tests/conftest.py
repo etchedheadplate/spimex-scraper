@@ -1,17 +1,23 @@
 import pytest
-
-from src.database.connection import sync_engine
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from src.database.models import BaseModel
+from src.database.config import DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME
+
+ASYNC_DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 
-@pytest.fixture(scope="session", autouse=True)
-def setup_db():
-    print("Before DB drop")
-    BaseModel.metadata.drop_all(sync_engine)
-    print("Before DB creation")
-    BaseModel.metadata.create_all(sync_engine)
-    yield
-    print("Before DB drop")
+@pytest.fixture(autouse=True)
+async def async_engine_fixture():
+    engine = create_async_engine(ASYNC_DATABASE_URL, pool_pre_ping=True)
+    async with engine.begin() as conn:
+        await conn.run_sync(BaseModel.metadata.drop_all)
+        await conn.run_sync(BaseModel.metadata.create_all)
+    yield engine
+    await engine.dispose()
 
 
-#    BaseModel.metadata.drop_all(sync_engine)
+@pytest.fixture()
+async def async_session(async_engine_fixture):
+    async_session_maker = async_sessionmaker(bind=async_engine_fixture, expire_on_commit=False)
+    async with async_session_maker() as session:
+        yield session
