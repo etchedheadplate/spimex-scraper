@@ -1,21 +1,13 @@
-from collections.abc import AsyncGenerator
 from datetime import date
 
 from fastapi import Query
 from pydantic import PositiveInt
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.schemas import (
     LastTradingDatesQuery,
     TradingDynamicsQuery,
     TradingResultsQuery,
 )
-from src.database.connection import async_session_maker
-
-
-async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
-    async with async_session_maker() as session:
-        yield session
 
 
 def last_trading_days_query(

@@ -1,5 +1,7 @@
+from collections.abc import AsyncGenerator
+
 from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy_utils import create_database, database_exists  # type: ignore
 
 from src.database.config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
@@ -19,3 +21,8 @@ ASYNC_DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PO
 async_engine = create_async_engine(ASYNC_DATABASE_URL, pool_pre_ping=True)
 
 async_session_maker = async_sessionmaker(bind=async_engine, expire_on_commit=False)
+
+
+async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
+    async with async_session_maker() as session:
+        yield session
