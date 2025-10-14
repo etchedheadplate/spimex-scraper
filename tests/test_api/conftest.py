@@ -1,10 +1,12 @@
+from random import choice, randint
+
 import pytest
-from random import randint, choice
 from faker import Faker
 from httpx import ASGITransport, AsyncClient
-from src.database.models import SpimexTradingResults
-from src.database.config import DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME
+
 from main import app
+from src.database.config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
+from src.database.models import SpimexTradingResults
 
 fake = Faker()
 
