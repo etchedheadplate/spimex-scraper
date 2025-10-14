@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pandas as pd
 import pytest
@@ -10,14 +10,6 @@ from src.database.connection import async_session_maker
 from src.processing.data_parser import SpimexParser
 from src.processing.data_scraper import LinkCollector
 from src.processing.db_loader import SpimexLoader
-
-
-@pytest.fixture
-async def db_session():
-    async with async_session_maker() as session:
-        async with session.begin():
-            yield session
-            await session.rollback()
 
 
 @pytest.fixture
@@ -37,16 +29,7 @@ def queue():
 
 
 @pytest.fixture
-def collector(queue: Any) -> LinkCollector:
-    return LinkCollector(
-        start_date=datetime(2025, 1, 1),
-        end_date=datetime(2025, 12, 31),
-        queue=queue,
-    )
-
-
-@pytest.fixture
-def mock_session_with_html(mock_html):
+def mock_session(mock_html):
     mock_response = MagicMock(status=200)
     mock_response.text = AsyncMock(return_value=mock_html)
 
@@ -57,7 +40,7 @@ def mock_session_with_html(mock_html):
     return mock_session
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def mock_xls() -> pd.DataFrame:
     xls_files = (
         {
@@ -100,23 +83,33 @@ def mock_xls() -> pd.DataFrame:
     return mock_files
 
 
-@pytest.fixture(scope="session")
-@patch("src.processing.data_parser.pd.read_excel")
-def parsed_df(mock_read_excel: Any, mock_xls: list[pd.DataFrame]) -> pd.DataFrame:
-    mock_read_excel.side_effect = mock_xls
-
-    parser = SpimexParser(files=["fake1.xls", "fake2.xls", "fake3.xls"])
-    return parser.parsed_df
+@pytest.fixture(autouse=True)
+def mock_read_excel(monkeypatch, mock_xls):
+    mock_func = MagicMock(side_effect=mock_xls)
+    monkeypatch.setattr("src.processing.data_parser.pd.read_excel", mock_func)
+    return mock_func
 
 
 @pytest.fixture
-def loader(parsed_df):
+def collector(queue: Any) -> LinkCollector:
+    return LinkCollector(start_date=datetime(2025, 1, 1), end_date=datetime(2025, 12, 31), queue=queue)
+
+
+@pytest.fixture
+def parser() -> SpimexParser:
+    return SpimexParser(files=["fake1.xls", "fake2.xls", "fake3.xls"])
+
+
+@pytest.fixture
+def loader(parser) -> SpimexLoader:
+    parser.parse()
+    parsed_df = parser.parsed_df
     return SpimexLoader(sessionmaker=async_session_maker, df=parsed_df, chunk_size=2)
 
 
 @pytest.mark.asyncio
-async def test_extract_links(collector, mock_session_with_html):
-    links = await collector._extract_links(mock_session_with_html, "https://spimex.com/page1")
+async def test_extract_links(collector, mock_session):
+    links = await collector._extract_links(mock_session, "https://spimex.com/page1")
 
     assert all(link.startswith("https://spimex.com") for link in links)
     assert all(link.endswith(".xls") for link in links)
@@ -141,12 +134,18 @@ async def test_collect_links(monkeypatch, collector, queue):
     assert collector._extract_links.await_count == 3
 
 
-def test_create_df(parsed_df):
-    result = parsed_df
-    ids = result["exchange_product_id"].to_list()
+def test_df_parsing(parser):
+    parser.parse()
+    parsed_df = parser.parsed_df
+    ids = parsed_df["exchange_product_id"].to_list()
 
-    assert not result.empty
-    assert "exchange_product_name" in result.columns
-    assert all(d.year == 2025 for d in result["date"])
-    assert result["count"].sum() == (5 + 10 + 20) * 3
+    assert not parsed_df.empty
+    assert "exchange_product_name" in parsed_df.columns
+    assert all(d.year == 2025 for d in parsed_df["date"])
+    assert parsed_df["count"].sum() == (5 + 10 + 20) * 3
     assert "0004JKLW" not in ids
+
+
+@pytest.mark.asyncio
+async def test_load_data_to_db(loader):
+    await loader.load()
